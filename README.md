@@ -80,7 +80,7 @@ SQLite is the default local substrate.
 
 # Architecture
 
-![Membrane Architecture](docs/assets/architecture.png)
+![Membrane Architecture](docs/assets/architecture.svg)
 
 The architecture separates the **memory control plane** from the **memory data plane**.
 
