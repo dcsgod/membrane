@@ -58,10 +58,10 @@ all = [
 membrane = "membrane.cli.main:app"
 
 [project.urls]
-Homepage = "https://github.com/dcsgod/membrane"
-Documentation = "https://github.com/dcsgod/membrane/blob/main/docs/architecture.md"
-Repository = "https://github.com/dcsgod/membrane"
-"Bug Tracker" = "https://github.com/dcsgod/membrane/issues"
+Homepage = "https://pypi.org/project/membrane-memory/"
+Documentation = "https://pypi.org/project/membrane-memory/"
+Repository = "https://pypi.org/project/membrane-memory/"
+"Bug Tracker" = "https://pypi.org/project/membrane-memory/"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/membrane"]
