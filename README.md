@@ -1,67 +1,79 @@
 <div align="center">
 
-<picture>
-  <img src="https://raw.githubusercontent.com/dcsgod/membrane/main/docs/assets/logo.svg" alt="Membrane" width="180" height="180">
-</picture>
+<img src="https://raw.githubusercontent.com/dcsgod/membrane/main/docs/assets/logo.svg" alt="Membrane" width="160">
 
 # Membrane
 
-**The programmable memory layer for AI agents.**
+### The programmable memory layer for AI agents.
 
-[![PyPI](https://img.shields.io/pypi/v/membrane-memory.svg?style=for-the-badge&color=4267E8)](https://pypi.org/project/membrane-memory/)
-[![Python](https://img.shields.io/pypi/pyversions/membrane-memory.svg?style=for-the-badge)](https://pypi.org/project/membrane-memory/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-4267E8.svg?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
+**Memory should be managed like a computational resource, not retrieved like a document collection.**
+
+[![PyPI](https://img.shields.io/pypi/v/membrane-memory?style=for-the-badge&color=4267E8)](https://pypi.org/project/membrane-memory/)
+[![Python](https://img.shields.io/pypi/pyversions/membrane-memory?style=for-the-badge)](https://pypi.org/project/membrane-memory/)
+[![License](https://img.shields.io/badge/License-Apache%202.0-4267E8?style=for-the-badge)](https://opensource.org/licenses/Apache-2.0)
+
+[Quickstart](#quickstart) · [How It Works](#how-it-works) · [Memory Lifecycle](#memory-lifecycle) · [Temporal Memory](#temporal-memory) · [Security](#security) · [Research](#research-direction)
 
 </div>
 
 ---
 
-## What is Membrane?
+## Why Membrane?
 
-Membrane is a **programmable memory runtime for AI agents**.
-
-> **Memory should be managed like a computational resource, not retrieved like a document collection.**
-
-Traditional RAG is usually:
+Most agent memory systems reduce to:
 
 ```text
 query → embed → vector search → context
 ```
 
-Membrane is:
+That works for similarity. It is not enough for **state, history, contradiction, forgetting, provenance, or exact facts**.
+
+Membrane treats memory as a managed runtime:
 
 ```text
 query / event
-      ↓
+      │
+      ▼
 memory controller
-      ↓
-read · write · update · forget
-      ↓
+      │
+      ├── read
+      ├── write
+      ├── update
+      └── forget
+      │
+      ▼
 memory query planner
-      ↓
+      │
+      ▼
 memory router
-      ↓
-structured · semantic · temporal · graph · KV · episodic
-      ↓
+      │
+      ├── structured
+      ├── semantic
+      ├── temporal
+      ├── graph
+      ├── KV / working
+      └── episodic
+      │
+      ▼
 rank · merge · budget · explain
-      ↓
+      │
+      ▼
 working context
 ```
 
-The core is **LLM-optional**. Deterministic memory management works locally without an API key or mandatory vector database.
+The core is **LLM-optional** and **local-first**. Membrane can manage memory without an API key, Docker, or a mandatory vector database.
 
-
-## Package
-
-[![PyPI](https://img.shields.io/pypi/v/membrane-memory.svg?style=for-the-badge&color=4267E8)](https://pypi.org/project/membrane-memory/)
-
-Install the package from **[PyPI](https://pypi.org/project/membrane-memory/)**.
+---
 
 ## Quickstart
+
+### Install
 
 ```bash
 pip install membrane-memory
 ```
+
+### Remember and recall
 
 ```python
 from membrane import Memory
@@ -81,23 +93,23 @@ result = memory.recall(
 print(result.memories[0].content)
 ```
 
-SQLite is the default local substrate.
+### Persistent local memory
 
-By default, `Memory()` uses an in-memory SQLite database for zero-configuration, ephemeral memory. For memory that survives process restarts, pass a persistent database path:
+SQLite is the default local substrate.
 
 ```python
 memory = Memory(db_path="membrane.db")
 ```
 
-The CLI uses `./membrane.db` by default, so `membrane remember ...` and `membrane recall ...` persist across separate command invocations.
+Use an explicit database path when memory should survive process restarts.
 
 ---
 
-# Architecture
+# How It Works
+
+Membrane separates the **memory control plane** from the **memory data plane**.
 
 ![Membrane Architecture](docs/assets/architecture.svg)
-
-The architecture separates the **memory control plane** from the **memory data plane**.
 
 ```mermaid
 flowchart TB
@@ -111,12 +123,12 @@ flowchart TB
     C --> G
     O --> G
 
-    subgraph G[Memory Cell / LSTM-inspired Controller]
-        F[Forget Gate f_t]
-        I[Write Gate i_t]
-        M[Candidate Memory M_tilde]
-        U[Update Gate u_t]
-        R[Read Gate o_t]
+    subgraph G[Memory Controller]
+        F[Forget Gate]
+        I[Write Gate]
+        M[Candidate Memory]
+        U[Update Gate]
+        R[Read Gate]
     end
 
     G --> P[Memory Query Planner]
@@ -140,25 +152,34 @@ flowchart TB
     A --> O
 ```
 
-### Critical design distinction
+### The LSTM connection
 
-The LSTM-inspired component is a **memory controller**, not an LSTM-shaped database.
+Membrane is **LSTM-inspired, not an LSTM database**.
 
-A vanilla LSTM has a dense cell state. Membrane uses a compact controller state to produce policies over external, heterogeneous memory.
+A conventional LSTM maintains a dense hidden/cell state. Membrane instead uses a compact controller state to produce policies over external, heterogeneous memory.
 
-This makes the LSTM analogy useful without pretending SQL rows, graph nodes, and vector records are literally an LSTM cell tensor.
+The analogy is useful because the controller has distinct operations for:
+
+| Gate | Memory responsibility |
+|---|---|
+| **Write** | Should this observation enter memory? |
+| **Update** | Does this observation revise an existing fact? |
+| **Forget** | Should memory decay, expire, or leave active state? |
+| **Read** | Which memory should enter working context? |
+
+This preserves the useful idea of gated state management without pretending that SQL rows, graph nodes, and vector records are an LSTM tensor.
 
 ---
 
 # Memory Gates
 
-Define:
+A conceptual controller can be expressed as:
 
 ```text
 z_t = [q_t ; x_t ; c_t ; h_{t-1}]
 ```
 
-### Forget gate
+### Forget
 
 ```text
 f_t = σ(W_f z_t + b_f)
@@ -166,7 +187,7 @@ f_t = σ(W_f z_t + b_f)
 
 Controls retention, decay, expiration, and removal from active memory.
 
-### Write gate
+### Write
 
 ```text
 i_t = σ(W_i z_t + b_i)
@@ -174,7 +195,7 @@ i_t = σ(W_i z_t + b_i)
 
 Controls admission of new observations.
 
-### Candidate memory
+### Candidate
 
 ```text
 M̃_t = φ(W_m z_t + b_m)
@@ -182,7 +203,7 @@ M̃_t = φ(W_m z_t + b_m)
 
 Represents proposed new memory.
 
-### Update gate
+### Update
 
 ```text
 u_t = σ(W_u z_t + b_u)
@@ -190,7 +211,7 @@ u_t = σ(W_u z_t + b_u)
 
 Controls revision and supersession.
 
-### LSTM-inspired state update
+### State update
 
 ```text
 M̄_t = f_t ⊙ M_{t-1} + i_t ⊙ M̃_t
@@ -198,7 +219,7 @@ M̄_t = f_t ⊙ M_{t-1} + i_t ⊙ M̃_t
 M_t = (1-u_t) ⊙ M_{t-1} + u_t ⊙ M̄_t
 ```
 
-### Read gate
+### Read
 
 ```text
 o_t = σ(W_o [h_t ; q_t] + b_o)
@@ -206,33 +227,45 @@ o_t = σ(W_o [h_t ; q_t] + b_o)
 R_t = o_t ⊙ Retrieve(Plan(q_t, c_t), M)
 ```
 
-The read gate controls how much selected memory enters working context.
+The read policy controls which selected memory is allowed into the working context.
 
 ---
 
 # Memory Lifecycle
 
+Memory is treated as a state machine rather than an append-only pile of text.
+
 ```text
-CANDIDATE
-    │
-    ├── accepted ───────► ACTIVE
-    │                       │
-    │                       ├── revised ──► UPDATED / SUPERSEDED
-    │                       ├── stale ────► ARCHIVED
-    │                       └── expired ──► FORGOTTEN
-    │
-    └── unsafe ─────────► QUARANTINED
+                         ┌──────────────┐
+                         │   CANDIDATE  │
+                         └──────┬───────┘
+                                │
+                    ┌───────────┴───────────┐
+                    │                       │
+                 accepted                 unsafe
+                    │                       │
+                    ▼                       ▼
+                 ACTIVE               QUARANTINED
+                    │
+          ┌─────────┼──────────┐
+          │         │          │
+       revised    stale      expired
+          │         │          │
+          ▼         ▼          ▼
+     SUPERSEDED  ARCHIVED   FORGOTTEN
 ```
 
-Every transition is intended to be auditable rather than silently destructive.
+The underlying model also represents written, rejected, and consolidated states.
+
+The goal is **auditable memory transitions instead of silent mutation or deletion**.
 
 ---
 
-# Memory Query Planner
+# Memory Query Planning
 
-Not every memory query is semantic search.
+Not every memory question is a semantic-search problem.
 
-| Query | Preferred substrate |
+| Question | Preferred memory strategy |
 |---|---|
 | What does the user prefer? | Semantic |
 | What is the current price? | Structured / KV |
@@ -240,53 +273,83 @@ Not every memory query is semantic search.
 | Who is connected to this project? | Graph |
 | What happened during the previous run? | Episodic |
 | What is the latest state? | KV / Structured |
-| Why was this decision made? | Hybrid + Provenance |
+| Why was this decision made? | Hybrid + provenance |
 
-The planner produces an inspectable plan before execution.
+The planner can produce an inspectable plan before retrieval.
+
+This is the central shift:
+
+> **Retrieve the right kind of memory, not merely the most similar text.**
 
 ---
 
 # Memory Substrates
 
-| Substrate | Purpose | Example |
-|---|---|---|
-| Structured | exact facts and attributes | SQLite / PostgreSQL |
-| Semantic | conceptual similarity | Qdrant / pgvector |
-| Temporal | history and point-in-time state | SQL / event log |
-| Graph | relationships and causal links | Neo4j |
-| KV / Working | current state and fast lookup | Redis / SQLite |
-| Episodic | events and artifacts | object store / filesystem |
+Membrane is designed around heterogeneous memory rather than a single storage primitive.
 
-Membrane does not require all substrates to be installed.
+| Substrate | Purpose | Example backend |
+|---|---|---|
+| **Structured** | Exact facts and attributes | SQLite, PostgreSQL |
+| **Semantic** | Conceptual similarity | Qdrant, pgvector |
+| **Temporal** | History and point-in-time state | SQL, event log |
+| **Graph** | Relationships and causal links | Graph database |
+| **KV / Working** | Current state and fast lookup | SQLite, Redis |
+| **Episodic** | Events and artifacts | Filesystem, object store |
+
+You do not need to install every substrate. The local core starts with SQLite.
 
 ---
 
 # Temporal Memory
 
-Current truth and historical truth are different queries.
+**Current truth and historical truth are different queries.**
+
+Structured fields allow exact facts to be represented independently of semantic similarity.
 
 ```python
 memory.remember(
     "SKU 123 price is $10",
-    structured={"entity": "sku_123", "attribute": "price", "value": 10},
+    structured={
+        "entity": "sku_123",
+        "attribute": "price",
+        "value": 10,
+    },
 )
 
 memory.remember(
     "SKU 123 price is $12",
-    structured={"entity": "sku_123", "attribute": "price", "value": 12},
+    structured={
+        "entity": "sku_123",
+        "attribute": "price",
+        "value": 12,
+    },
 )
 
-memory.recall("current price", entity="sku_123")
-memory.timeline("sku_123")
+current = memory.recall("current price", entity="sku_123")
+history = memory.timeline("sku_123")
 ```
 
-The current record can supersede the previous record while the historical record remains recoverable.
+A newer fact can supersede an older fact while the historical record remains recoverable.
+
+This distinction matters for agents that need to answer both:
+
+```text
+"What is true now?"
+```
+
+and:
+
+```text
+"What was true then?"
+```
 
 ---
 
-# Provenance and Outcome Memory
+# Provenance and Explainability
 
-Membrane tracks the path:
+Memory should not become a black box.
+
+Membrane models a trace from source to outcome:
 
 ```text
 source
@@ -308,7 +371,9 @@ agent decision
 outcome
 ```
 
-This enables outcome-based reinforcement:
+Retrieval results carry identifiers, scores, plans, dropped candidates, and provenance so memory decisions can be inspected.
+
+This also enables a future feedback loop:
 
 ```text
 decision → action → outcome → utility → memory policy update
@@ -320,20 +385,75 @@ decision → action → outcome → utility → memory policy update
 
 Memory is an attack surface.
 
-Untrusted instruction-like observations should be isolated:
+Untrusted instruction-like observations should not automatically become trusted agent context.
 
 ```text
 untrusted observation
-        ↓
+        │
+        ▼
    trust / policy gate
-       / \
-      /   \
- trusted  suspicious
-   ↓          ↓
- ACTIVE   QUARANTINED
+      /       \
+     /         \
+ trusted     suspicious
+    │             │
+    ▼             ▼
+ ACTIVE       QUARANTINED
 ```
 
-Policies can control tenant isolation, source trust, retention, write permissions, sensitive fields, and retrieval scope.
+The memory model includes:
+
+- trust tiers
+- namespace isolation
+- provenance
+- retention and expiration
+- write permissions
+- sensitive-field handling
+- retrieval scope
+- tamper-evident event chaining
+
+---
+
+# Agent Integration
+
+Membrane is intended to sit beside your agent framework rather than replace it.
+
+```text
+User
+ │
+ ▼
+Agent / Orchestrator
+ │
+ ├──────────────► Membrane.recall()
+ │                    │
+ │                    ▼
+ │              curated context
+ │
+ ▼
+LLM / Tools
+ │
+ └──────────────► Membrane.remember()
+```
+
+Optional integrations are available through package extras:
+
+```bash
+pip install "membrane-memory[mcp]"
+pip install "membrane-memory[server]"
+pip install "membrane-memory[embeddings-local]"
+```
+
+---
+
+# Design Principles
+
+1. **Memory is not RAG.** Semantic retrieval is one mechanism, not the memory model.
+2. **Control and storage are separate.** Policies decide what memory should do; substrates store it.
+3. **Exact facts remain structured.** Do not use embeddings for every question.
+4. **History matters.** Supersession should not erase the past.
+5. **Memory is budget-aware.** Working context is a constrained resource.
+6. **LLMs are optional infrastructure.** Core memory management can remain deterministic.
+7. **Important decisions should be explainable.** Retrieval and lifecycle decisions should be inspectable.
+8. **Security belongs inside the memory layer.** Untrusted observations should be treated as untrusted data.
 
 ---
 
@@ -343,39 +463,72 @@ The central research question is:
 
 > **Can an AI system dynamically manage heterogeneous memory as a computational resource?**
 
-Potential research dimensions:
+Areas of interest include:
 
 - learned memory gating
 - temporal contradiction resolution
 - adaptive forgetting
-- consolidation
+- memory consolidation
 - outcome-based reinforcement
 - substrate routing
 - context-budget optimization
 - LLM-free memory control
-- replay
+- replay and memory evaluation
 
-A future **MemoryBench** should measure retrieval quality, temporal correctness, contradiction rate, write/forget precision, consolidation quality, latency, storage growth, and token consumption.
+A future **MemoryBench** should measure:
 
-## Design Principles
+| Dimension | Example metric |
+|---|---|
+| Retrieval | relevance, recall, precision |
+| Temporal | point-in-time correctness |
+| Lifecycle | write / update / forget precision |
+| Consistency | contradiction rate |
+| Consolidation | information retention |
+| Efficiency | latency and storage growth |
+| Context | token consumption |
+| Explainability | provenance completeness |
 
-1. **Memory is not RAG.** Semantic retrieval is only one mechanism.
-2. **Control and storage are separate.**
-3. **Exact facts should remain structured.**
-4. **History should be preserved.**
-5. **Memory should be budget-aware.**
-6. **LLMs are optional infrastructure.**
-7. **Important decisions should be explainable.**
+---
 
-## Contributing
+# Project Status
+
+Membrane is currently **alpha software**.
+
+The project is intentionally designed as a research-oriented foundation for programmable agent memory. APIs and storage abstractions may evolve as the runtime matures.
+
+---
+
+# Development
 
 ```bash
 git clone https://github.com/dcsgod/membrane.git
 cd membrane
+
 pip install -e ".[dev]"
+
 pytest
 ```
 
-## License
+For local experimentation:
+
+```bash
+membrane --help
+```
+
+---
+
+# License
 
 Apache 2.0.
+
+---
+
+<div align="center">
+
+**Membrane**
+
+*Programmable memory for agents.*
+
+[PyPI](https://pypi.org/project/membrane-memory/) · [GitHub](https://github.com/dcsgod/membrane)
+
+</div>
