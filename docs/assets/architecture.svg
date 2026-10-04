@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000">
+<defs><style>.t{font-family:Inter,Arial,sans-serif;fill:#14213D}.s{font-family:Inter,Arial,sans-serif;fill:#53627A}.box{stroke:#CBD5E1;stroke-width:2}.line{stroke:#334155;stroke-width:3;fill:none}.dash{stroke:#6D5CE7;stroke-width:3;stroke-dasharray:9 8;fill:none}</style><linearGradient id="bg"><stop stop-color="#F8FBFF"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient><linearGradient id="g"><stop stop-color="#E7F8FF"/><stop offset="1" stop-color="#F1ECFF"/></linearGradient></defs>
+<rect width="1600" height="1000" fill="url(#bg)"/>
+<text x="70" y="72" class="t" font-size="40" font-weight="700">Membrane — Programmable Memory Runtime</text>
+<text x="70" y="108" class="s" font-size="22">LSTM-inspired memory control over heterogeneous external memory</text>
+<rect x="60" y="145" width="1480" height="95" rx="18" fill="#EEF6FF" class="box"/>
+<text x="90" y="180" class="t" font-size="20" font-weight="700">INPUTS</text><text x="90" y="210" class="s" font-size="17">query qₜ · new information xₜ · context cₜ · outcome / feedback</text>
+<rect x="60" y="270" width="1480" height="270" rx="22" fill="url(#g)" class="box"/>
+<text x="90" y="315" class="t" font-size="25" font-weight="700">Memory Cell / Gate Controller</text>
+<text x="90" y="348" class="s" font-size="17">LSTM-inspired controller — policies over external memory, not a database-shaped LSTM cell</text>
+<g>
+<rect x="100" y="390" width="200" height="105" rx="16" fill="#E9F8FF" class="box"/><text x="125" y="430" class="t" font-size="20" font-weight="700">fₜ</text><text x="125" y="458" class="s" font-size="16">Forget gate</text><text x="125" y="481" class="s" font-size="14">retention / decay</text>
+<rect x="330" y="390" width="200" height="105" rx="16" fill="#FFF6E6" class="box"/><text x="355" y="430" class="t" font-size="20" font-weight="700">iₜ</text><text x="355" y="458" class="s" font-size="16">Write gate</text><text x="355" y="481" class="s" font-size="14">admission</text>
+<rect x="560" y="390" width="220" height="105" rx="16" fill="#EEF4FF" class="box"/><text x="585" y="430" class="t" font-size="20" font-weight="700">M̃ₜ</text><text x="585" y="458" class="s" font-size="16">Candidate memory</text><text x="585" y="481" class="s" font-size="14">new information</text>
+<rect x="810" y="390" width="200" height="105" rx="16" fill="#F2EDFF" class="box"/><text x="835" y="430" class="t" font-size="20" font-weight="700">uₜ</text><text x="835" y="458" class="s" font-size="16">Update gate</text><text x="835" y="481" class="s" font-size="14">revise / supersede</text>
+<rect x="1040" y="390" width="200" height="105" rx="16" fill="#EDF9EF" class="box"/><text x="1065" y="430" class="t" font-size="20" font-weight="700">oₜ</text><text x="1065" y="458" class="s" font-size="16">Read gate</text><text x="1065" y="481" class="s" font-size="14">expose context</text>
+</g>
+<text x="1280" y="410" class="t" font-size="18" font-weight="700">Controller equations</text><text x="1280" y="440" class="s" font-size="15">fₜ = σ(Wf zₜ + bf)</text><text x="1280" y="465" class="s" font-size="15">iₜ = σ(Wi zₜ + bi)</text><text x="1280" y="490" class="s" font-size="15">uₜ = σ(Wu zₜ + bu)</text><text x="1280" y="515" class="s" font-size="15">M̄ₜ = fₜ⊙Mₜ₋₁ + iₜ⊙M̃ₜ</text><text x="1280" y="540" class="s" font-size="15">Mₜ = (1-uₜ)⊙Mₜ₋₁ + uₜ⊙M̄ₜ</text>
+<path d="M800 240v30M800 540v35" class="line"/>
+<rect x="60" y="575" width="1480" height="100" rx="18" fill="#F4F8FC" class="box"/>
+<text x="90" y="615" class="t" font-size="22" font-weight="700">Memory Query Planner</text><text x="90" y="646" class="s" font-size="16">semantic · structured · temporal · graph · state/KV · episodic · hybrid</text>
+<path d="M800 675v35" class="line"/>
+<rect x="60" y="710" width="1480" height="90" rx="18" fill="#F7F9FC" class="box"/>
+<text x="90" y="750" class="t" font-size="22" font-weight="700">Memory Router</text><text x="90" y="778" class="s" font-size="16">routes to the minimum appropriate substrate and merges results</text>
+<path d="M800 800v30" class="line"/>
+<g>
+<rect x="60" y="830" width="230" height="110" rx="16" fill="#EAF7FF" class="box"/><text x="85" y="865" class="t" font-size="18" font-weight="700">Structured</text><text x="85" y="893" class="s" font-size="14">SQLite / PostgreSQL</text><text x="85" y="916" class="s" font-size="14">exact facts</text>
+<rect x="310" y="830" width="230" height="110" rx="16" fill="#F0EDFF" class="box"/><text x="335" y="865" class="t" font-size="18" font-weight="700">Semantic</text><text x="335" y="893" class="s" font-size="14">Qdrant / pgvector</text><text x="335" y="916" class="s" font-size="14">similarity</text>
+<rect x="560" y="830" width="230" height="110" rx="16" fill="#FFF1EE" class="box"/><text x="585" y="865" class="t" font-size="18" font-weight="700">Temporal</text><text x="585" y="893" class="s" font-size="14">event log / SQL</text><text x="585" y="916" class="s" font-size="14">history</text>
+<rect x="810" y="830" width="230" height="110" rx="16" fill="#ECFAF0" class="box"/><text x="835" y="865" class="t" font-size="18" font-weight="700">Graph</text><text x="835" y="893" class="s" font-size="14">Neo4j / graph DB</text><text x="835" y="916" class="s" font-size="14">relationships</text>
+<rect x="1060" y="830" width="230" height="110" rx="16" fill="#EEF6FF" class="box"/><text x="1085" y="865" class="t" font-size="18" font-weight="700">KV / Working</text><text x="1085" y="893" class="s" font-size="14">Redis / SQLite</text><text x="1085" y="916" class="s" font-size="14">current state</text>
+<rect x="1310" y="830" width="230" height="110" rx="16" fill="#F4EDFF" class="box"/><text x="1335" y="865" class="t" font-size="18" font-weight="700">Episodic</text><text x="1335" y="893" class="s" font-size="14">objects / events</text><text x="1335" y="916" class="s" font-size="14">experience</text>
+</g>
+</svg>
