@@ -50,6 +50,13 @@ working context
 
 The core is **LLM-optional**. Deterministic memory management works locally without an API key or mandatory vector database.
 
+
+## Package
+
+[![PyPI](https://img.shields.io/pypi/v/membrane-memory.svg?style=for-the-badge&color=4267E8)](https://pypi.org/project/membrane-memory/)
+
+Install the package from **[PyPI](https://pypi.org/project/membrane-memory/)**.
+
 ## Quickstart
 
 ```bash
