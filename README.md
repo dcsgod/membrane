@@ -83,6 +83,14 @@ print(result.memories[0].content)
 
 SQLite is the default local substrate.
 
+By default, `Memory()` uses an in-memory SQLite database for zero-configuration, ephemeral memory. For memory that survives process restarts, pass a persistent database path:
+
+```python
+memory = Memory(db_path="membrane.db")
+```
+
+The CLI uses `./membrane.db` by default, so `membrane remember ...` and `membrane recall ...` persist across separate command invocations.
+
 ---
 
 # Architecture
