@@ -4,7 +4,9 @@
 
 # Membrane
 
-### The programmable memory layer for AI agents.
+### Programmable memory runtime for AI agents, LLMs and agentic systems.
+
+**Membrane** is an open-source **AI agent memory framework** that manages structured, semantic, temporal, graph, working/KV and episodic memory with explicit read, write, update and forget operations.
 
 **Memory should be managed like a computational resource, not retrieved like a document collection.**
 
